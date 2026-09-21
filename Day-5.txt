@@ -1,0 +1,457 @@
+Drop,delete,truncate
+--------------------------------------------------
+Delete
+========
+Step-by-Step Example in MySQL:
+Step 1: Create the Table and Insert Data
+First, create the employees table and insert sample data.
+-- Drop table if it already exists
+DROP TABLE IF EXISTS employees;
+-- Create employees table with AUTO_INCREMENT primary key
+CREATE TABLE employees (
+    employee_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    department VARCHAR(50),
+    salary DECIMAL(10, 2)
+);
+INSERT INTO employees (first_name, last_name, department, salary)
+VALUES
+('Ravi', 'Kumar', 'HR', 50000.00),
+('Anjali', 'Sharma', 'Sales', 60000.00),
+('Amit', 'Patel', 'HR', 55000.00),
+('Sneha', 'Reddy', 'Engineering', 70000.00),
+('Vikram', 'Nair', 'Sales', 65000.00);
+Step 2: Use DELETE with Rollback
+The DELETE command can be used with a transaction, and changes can be rolled back if needed.
+-- Start a transaction
+START TRANSACTION;
+-- Perform DELETE operation (delete employees from the Sales department)
+DELETE FROM employees WHERE department = 'Sales';
+-- Check the current state of the table (after DELETE but before commit or rollback)
+SELECT * FROM employees;
+-- Rollback the transaction (undo the DELETE)
+ROLLBACK;
+-- Check the data again (after rollback)
+SELECT * FROM employees;
+Expected Outcome: After ROLLBACK, no rows should be deleted from the table, and the Sales department employees will be restored.
+If you had used COMMIT instead of ROLLBACK, the changes would be permanent.
+-- COMMIT the changes if you want the DELETE to be permanent
+COMMIT;
+-- Check the data after commit
+SELECT * FROM employees;
+Expected Outcome: The employees from the Sales department would be deleted permanently.
+Step 3: Use TRUNCATE (Not Rollbackable in MySQL)
+In MySQL, TRUNCATE is a DDL (Data Definition Language) operation, not a DML (Data Manipulation Language) operation. This means it cannot be rolled back in MySQL.
+-- Start a new transaction
+START TRANSACTION;
+-- Perform TRUNCATE operation (remove all rows from the table)
+TRUNCATE TABLE employees;
+-- Check the data after TRUNCATE (before commit or rollback)
+SELECT * FROM employees;
+-- Rollback will not work here, because TRUNCATE cannot be rolled back in MySQL.
+-- Try ROLLBACK (it won't undo TRUNCATE in MySQL)
+ROLLBACK;
+-- Check the data again (it won't restore the data)
+SELECT * FROM employees;
+Expected Outcome: After TRUNCATE, the table will be empty, and ROLLBACK will have no effect because TRUNCATE in MySQL cannot be rolled back.
+If you had used COMMIT, the data would be permanently deleted.
+-- COMMIT the changes if you want the TRUNCATE to be permanent
+COMMIT;
+-- Check the data after commit
+SELECT * FROM employees;
+Expected Outcome: The table will remain empty after a successful commit of the TRUNCATE.
+Step 4: Use DROP (Not Rollbackable in MySQL)
+In MySQL, DROP is also a DDL command and cannot be rolled back once executed. It will completely remove the table from the database.
+-- Start a new transaction
+START TRANSACTION;
+-- Perform DROP operation (remove the employees table)
+DROP TABLE employees;
+-- Check if the table still exists (before commit or rollback)
+SELECT * FROM employees; -- This will give an error because the table no longer exists
+-- Rollback will not work here, because DROP cannot be rolled back in MySQL.
+ROLLBACK;
+-- Try checking the data again (it won't restore the table)
+SELECT * FROM employees; -- This will give an error again
+Expected Outcome: After DROP, the table is removed from the database, and ROLLBACK will not restore the table, because DROP is not rollbackable in MySQL.
+If you had used COMMIT, the table would be permanently removed.
+-- COMMIT the changes if you want the DROP to be permanent
+COMMIT;
+-- Attempting to check the table will result in an error, as it no longer exists.
+SELECT * FROM employees; -- Error: Table doesn't exist
+Summary:
+DELETE: Can be rolled back within a transaction.
+TRUNCATE: Cannot be rolled back in MySQL (it’s treated as a DDL command).
+DROP: Cannot be rolled back in MySQL (it’s a DDL command that completely removes the table).
+To safely perform actions that can be rolled back in MySQL, you should rely on DELETE within transactions. TRUNCATE and DROP are permanent changes in MySQL and cannot be undone unless you have backups or restore points.
+
+Key Differences Summary:
+----------------------------------------------------------------------------------------------------------------------------------
+| Feature              | DROP                        | DELETE                             | TRUNCATE                              |
+|----------------------|-----------------------------|------------------------------------|---------------------------------------|
+| Action               | Removes the table or object | Removes specific rows from a table | Removes all rows, keeps structure     |
+| Data Removed         | Table structure + data      | Specific rows (based on WHERE)     | All rows                              |
+| Table Structure      | Removed                     | Intact                             | Intact                                |
+| Performance          | Slow (due to full removal)  | Slower (row-by-row)                | Fast (bulk deletion)                  |
+| Rollback             | No (unless in transaction)  | Yes                                | Yes (if supported by DB)              |
+| Auto-Increment Reset | N/A                         | No                                 | Yes (depending on DB)                 |
+-----------------------------------------------------------------------------------------------------------------------------------
+
+ 3. Data Control Language
+DCL commands are used to grant and take back authority from any database user.
+Following are the some commands that come under DCL:
+1.GRANT
+2.REVOKE
+Syntax:
+GRANT <obj_priv> ON <obj_name> To <username>;
+In the above syntax, obj_priv> is the DML statement like Insert, Delete , update and Select and <obj_name> is a table, view etc. and username is the name of the authorized user.
+Example
+GRANT SELECT, UPDATE ON MY_TABLE TO SOME_USER, ANOTHER_USER;
+b. Revoke: It is used to take back permissions from the user.
+Syntax:
+REVOKE <obj_priv> ON <obj_name> FROM <username>;
+In the above syntax, obj_priv> is the DML statement like Insert, Delete , update and Select and <obj_name> is a table, view etc. and username is the name of the user from whom the permission is revoked.
+Example
+REVOKE SELECT, UPDATE ON MY_TABLE FROM USER1, USER2;
+
+
+Grant and Revoke
+============================
+mysql> use codegnan;
+Database changed
+mysql> show tables;
++--------------------+
+| Tables_in_codegnan |
++--------------------+
+| codegnan_emp       |
++--------------------+
+1 row in set (0.23 sec)
+
+mysql> create table students(
+    -> name varchar(20),
+    -> age int,
+    -> mobile varchar(12)
+    -> );
+Query OK, 0 rows affected (0.15 sec)
+
+mysql> insert into students values('student 1',23,'9182454984');
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select*from students;
++-----------+------+------------+
+| name      | age  | mobile     |
++-----------+------+------------+
+| student 1 |   23 | 9182454984 |
++-----------+------+------------+
+1 row in set (0.00 sec)
+
+mysql> create user user1 identified by ‘user1’;
+Query OK, 0 rows affected (0.10 sec)
+
+mysql> grant select,insert,update on students to user1;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> create user user2 identified by ‘user2’;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> grant select,update on students to user2;
+Query OK, 0 rows affected (0.01 sec)
+
+
+
+user1 previligeous
+------------------------
+C:\Program Files\MySQL\MySQL Server 8.0\bin>mysql -u USER1 -p
+Enter password: *****
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 75
+Server version: 8.0.39 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> use codegnan;
+Database changed
+mysql> select*from user1;
+ERROR 1142 (42000): SELECT command denied to user 'user1'@'localhost' for table 'user1'
+mysql> select*from students;
++-----------+------+------------+
+| name      | age  | mobile     |
++-----------+------+------------+
+| student 1 |   23 | 9182454984 |
++-----------+------+------------+
+1 row in set (0.00 sec)
+
+mysql> insert into students values('student 2',32,'8834248768');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into student(name,mobile) values('student 3','874772372'),('student 4','689648797');
+ERROR 1142 (42000): INSERT command denied to user 'user1'@'localhost' for table 'student'
+mysql> insert into students(name,mobile) values('student 3','874772372'),('student 4','689648797');
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> update students set age=37 where name='student4';
+Query OK, 0 rows affected (0.01 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+mysql> drop table student;
+ERROR 1142 (42000): DROP command denied to user 'user1'@'localhost' for table 'student'
+mysql> delete table students;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'table students' at line 1
+mysql> delete from students where age=37;;
+ERROR 1142 (42000): DELETE command denied to user 'user1'@'localhost' for table 'students'
+ERROR:
+No query specified
+
+mysql>
+
+
+user2 previloges
+====================
+C:\Program Files\MySQL\MySQL Server 8.0\bin>mysql -u USER2 -p
+Enter password: *****
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 79
+Server version: 8.0.39 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> select*from students;
+ERROR 1046 (3D000): No database selected
+mysql> use codegnan;
+Database changed
+mysql> select*from students;
++-----------+------+------------+
+| name      | age  | mobile     |
++-----------+------+------------+
+| student 1 |   23 | 9182454984 |
+| student 2 |   32 | 8834248768 |
+| student 3 | NULL | 874772372  |
+| student 4 | NULL | 689648797  |
++-----------+------+------------+
+4 rows in set (0.01 sec)
+
+mysql> insert into students values('djs',09,'9889');
+ERROR 1142 (42000): INSERT command denied to user 'user2'@'localhost' for table 'students'
+mysql> drop table students;
+ERROR 1142 (42000): DROP command denied to user 'user2'@'localhost' for table 'students'
+mysql> update students age=40 where name='student 4';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '=40 where name='student 4'' at line 1
+mysql> update students set age=40 where name='student 4';
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select*from students;
++-----------+------+------------+
+| name      | age  | mobile     |
++-----------+------+------------+
+| student 1 |   23 | 9182454984 |
+| student 2 |   32 | 8834248768 |
+| student 3 | NULL | 874772372  |
+| student 4 |   40 | 689648797  |
++-----------+------+------------+
+4 rows in set (0.00 sec)
+
+mysql>
+
+
+===============================================================================
+Revoke
+---------
+mysql> revoke update on students from user2;
+Query OK, 0 rows affected (0.01 sec)
+
+update students set age=40 where name='student 4';
+ERROR 1142 (42000): UPDATE command denied to user 'user2'@'localhost' for table 'students'
+
+
+DDL,DML,DQL practice Questions and answers
+================================================
+
+Table creation
+================
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(100),
+    department VARCHAR(50),
+    job_role VARCHAR(50),
+    salary DECIMAL(10,2),
+    joining_date DATE,
+    city VARCHAR(50)
+);
+
+INSERT INTO employees
+(emp_id, emp_name, department, job_role, salary, joining_date, city)
+VALUES
+(101, 'Ravi Kumar', 'IT', 'Developer', 45000, '2023-01-15', 'Vizag'),
+(102, 'Priya Sharma', 'HR', 'HR Manager', 55000, '2022-06-20', 'Hyderabad'),
+(103, 'Kiran Reddy', 'IT', 'Tester', 40000, '2023-03-10', 'Vizag'),
+(104, 'Sneha Rao', 'Finance', 'Accountant', 48000, '2021-11-25', 'Chennai'),
+(105, 'Arun Kumar', 'IT', 'Developer', 60000, '2020-08-18', 'Bangalore'),
+(106, 'Divya Reddy', 'HR', 'Recruiter', 35000, '2024-01-05', 'Vizag'),
+(107, 'Suresh Babu', 'Sales', 'Executive', 42000, '2022-09-12', 'Hyderabad'),
+(108, 'Anjali Devi', 'IT', 'Developer', 70000, '2019-05-30', 'Chennai'),
+(109, 'Mahesh Kumar', 'Sales', 'Manager', 65000, '2020-02-14', 'Bangalore'),
+(110, 'Lakshmi Rao', 'Finance', 'Analyst', 52000, '2023-07-22', 'Hyderabad');
+
+
+Update Examples
+==================
+-- 1. Update the salary of Ravi Kumar
+UPDATE employees
+SET salary = 50000
+WHERE emp_id = 101;
+
+-- 2. Increase salary by 10% for all IT employees
+UPDATE employees
+SET salary = salary * 1.10
+WHERE department = 'IT';
+
+-- 3. Change Priya Sharma's city
+UPDATE employees
+SET city = 'Vizag'
+WHERE emp_id = 102;
+
+-- 4. Change Kiran Reddy's job role
+UPDATE employees
+SET job_role = 'Senior Tester'
+WHERE emp_id = 103;
+
+-- 5. Increase salary by 5000 for all HR employees
+UPDATE employees
+SET salary = salary + 5000
+WHERE department = 'HR';
+
+-- 6. Change all employees in Vizag to Hyderabad
+UPDATE employees
+SET city = 'Hyderabad'
+WHERE city = 'Vizag';
+
+-- 7. Change Arun Kumar's department
+UPDATE employees
+SET department = 'Development'
+WHERE emp_id = 105;
+
+-- 8. Increase salary by 15% for employees earning less than 45000
+UPDATE employees
+SET salary = salary * 1.15
+WHERE salary < 45000;
+
+-- 9. Change Anjali Devi's job role
+UPDATE employees
+SET job_role = 'Senior Developer'
+WHERE emp_id = 108;
+
+-- 10. Update the city of all Finance employees to Bangalore
+UPDATE employees
+SET city = 'Bangalore'
+WHERE department = 'Finance';
+
+Delete Examples
+================
+-- 1. Delete employee with ID 106
+DELETE FROM employees
+WHERE emp_id = 106;
+
+-- 2. Delete employees from the Finance department
+DELETE FROM employees
+WHERE department = 'Finance';
+
+-- 3. Delete employees earning less than 40000
+DELETE FROM employees
+WHERE salary < 40000;
+
+-- 4. Delete employees working in Vizag
+DELETE FROM employees
+WHERE city = 'Vizag';
+
+-- 5. Delete employee named Suresh Babu
+DELETE FROM employees
+WHERE emp_name = 'Suresh Babu';
+
+-- 6. Delete employees who joined before 2020
+DELETE FROM employees
+WHERE joining_date < '2020-01-01';
+
+-- 7. Delete employees working as Recruiter
+DELETE FROM employees
+WHERE job_role = 'Recruiter';
+
+-- 8. Delete employees from the Sales department earning less than 50000
+DELETE FROM employees
+WHERE department = 'Sales'
+AND salary < 50000;
+
+-- 9. Delete employee with the lowest salary
+DELETE FROM employees
+WHERE salary = (
+    SELECT MIN(salary)
+    FROM employees
+);
+
+-- 10. Delete employees whose city is Chennai
+DELETE FROM employees
+WHERE city = 'Chennai';
+
+
+Select Queries
+================
+-- 1. Display all employees
+SELECT * FROM employees;
+
+-- 2. Display employees working in IT
+SELECT *
+FROM employees
+WHERE department = 'IT';
+
+-- 3. Display employees earning more than 50000
+SELECT *
+FROM employees
+WHERE salary > 50000;
+
+-- 4. Display employee names and salaries
+SELECT emp_name, salary
+FROM employees;
+
+-- 5. Display employees from Vizag
+SELECT *
+FROM employees
+WHERE city = 'Vizag';
+
+-- 6. Display employees who joined after 2022-01-01
+SELECT *
+FROM employees
+WHERE joining_date > '2022-01-01';
+
+-- 7. Display employees earning between 40000 and 60000
+SELECT *
+FROM employees
+WHERE salary BETWEEN 40000 AND 60000;
+
+-- 8. Display employees whose name ends with 'Kumar'
+SELECT *
+FROM employees
+WHERE emp_name LIKE '%Kumar';
+
+-- 9. Display employees in descending order of salary
+SELECT *
+FROM employees
+ORDER BY salary DESC;
+
+-- 10. Display the highest-paid employee
+SELECT *
+FROM employees
+ORDER BY salary DESC
+LIMIT 1;
